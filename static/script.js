@@ -75,7 +75,10 @@ async function fetchFeedItems(index) {
     if (data.success && data.data) {
         data.data.forEach(item => {
             const li = document.createElement("li");
-            li.textContent = item;
+            li.innerHTML = `
+                <strong>${item.title}</strong><br>
+                <a href="${item.link}" target="_blank">${item.link}</a>
+            `;
             feedItemsList.appendChild(li);
         });
     } else {
@@ -83,5 +86,39 @@ async function fetchFeedItems(index) {
     }
 }
 
+// Fetch and display all grouped feeds
+async function fetchAllFeeds() {
+    const response = await fetch(`${API_BASE}/fetch_all`);
+    const data = await response.json();
+
+    // Clear the feed items list
+    feedItemsList.innerHTML = "";
+
+    if (data.success && data.data) {
+        data.data.forEach(feedGroup => {
+            const urlHeading = document.createElement("h3");
+            urlHeading.textContent = `Feed: ${feedGroup.url}`;
+            feedItemsList.appendChild(urlHeading);
+
+            const itemList = document.createElement("ul");
+            feedGroup.items.forEach(item => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <strong>${item.title}</strong><br>
+                    <a href="${item.link}" target="_blank">${item.link}</a>
+                `;
+                itemList.appendChild(li);
+            });
+
+            feedItemsList.appendChild(itemList);
+        });
+    } else {
+        alert(data.error || "Failed to fetch feeds");
+    }
+}
+
+// Initial fetch for grouped feeds
+fetchAllFeeds();
+
 // Initial fetch of feeds
-fetchFeeds();
+// fetchFeeds();
