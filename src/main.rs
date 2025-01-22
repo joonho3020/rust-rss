@@ -120,6 +120,7 @@ struct FeedGroup {
 struct FeedItem {
     title: String,
     link: String,
+    comments: String, // New field for comments link
 }
 
 // Route to fetch and display items from a specific RSS feed
@@ -141,6 +142,8 @@ async fn fetch_feed(
                         .map(|item| FeedItem {
                             title: item.title().unwrap_or("No Title").to_string(),
                             link: item.link().unwrap_or("No Link").to_string(),
+                            comments: item.comments().unwrap_or("No Comments Link").to_string(),
+
                         })
                         .collect();
 
@@ -193,6 +196,7 @@ async fn fetch_all_feeds(State(state): State<AppState>) -> Json<ApiResponse<Vec<
                         .map(|item| FeedItem {
                             title: item.title().unwrap_or("No Title").to_string(),
                             link: item.link().unwrap_or("No Link").to_string(),
+                            comments: item.comments().unwrap_or("No Comments Link").to_string(),
                         })
                         .collect();
 

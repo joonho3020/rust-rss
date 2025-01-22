@@ -105,7 +105,8 @@ async function fetchAllFeeds() {
                 const li = document.createElement("li");
                 li.innerHTML = `
                     <strong>${item.title}</strong><br>
-                    <a href="${item.link}" target="_blank">${item.link}</a>
+                    <strong>Post:</strong> <a href="${item.link}" target="_blank">${item.link}</a><br>
+                    <strong>Comment:</strong> <a href="${item.comments}" target="_blank">${item.comments}</a>
                 `;
                 itemList.appendChild(li);
             });
