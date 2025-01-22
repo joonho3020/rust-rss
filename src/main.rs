@@ -1,7 +1,7 @@
 use axum::{
     extract::{Path, State},
     response::Json,
-    routing::{get, post, delete},
+    routing::{get, post, delete, get_service},
     Router,
 };
 use serde::{Deserialize, Serialize};
@@ -9,6 +9,8 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use rss::Channel;
 use reqwest;
+use tower_http::services::fs::ServeDir; // For serving static files
+
 
 // Application state: a list of RSS feed URLs
 type AppState = Arc<Mutex<Vec<String>>>;
@@ -137,6 +139,7 @@ async fn main() {
 
     // Define the routes
     let app = Router::new()
+        .nest_service("/", get_service(ServeDir::new("./static"))) // Serve frontend files
         .route("/feeds", get(list_feeds).post(add_feed)) // GET: list feeds, POST: add feed
         .route("/feeds/:index", delete(remove_feed)) // DELETE: remove feed by index
         .route("/fetch/:index", get(fetch_feed)) // GET: fetch feed items by index
