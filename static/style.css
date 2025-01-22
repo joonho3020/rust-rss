@@ -1,17 +1,19 @@
+/* General Styling */
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
     background-color: #f4f4f9;
     color: #333;
+    margin: 0;
+    padding: 0;
 }
 
 .container {
-    width: 80%;
+    width: 90%;
+    max-width: 1200px;
     margin: 20px auto;
     padding: 20px;
     background: #fff;
-    border-radius: 5px;
+    border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -20,49 +22,88 @@ h1 {
     color: #333;
 }
 
-.add-feed, .feeds, .feed-items {
+h2 {
+    color: #555;
     margin-top: 20px;
 }
 
-input {
-    padding: 10px;
-    width: 70%;
-    margin-right: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
+h3.feed-url {
+    color: #007bff;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
     cursor: pointer;
 }
 
-button:hover {
-    background-color: #0056b3;
+h3.feed-url:hover {
+    text-decoration: underline;
 }
 
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-ul li {
-    margin: 5px 0;
-    padding: 10px;
+/* Feed Container Styling */
+.feed-container {
+    margin-bottom: 20px;
+    padding: 15px;
     background: #f9f9f9;
     border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Collapsible Feed Items */
+.feed-items {
+    margin: 10px 0;
+    list-style: none;
+    padding: 0;
+    transition: max-height 0.3s ease-out;
+    overflow: hidden; /* Hide content when collapsed */
+    max-height: 0; /* Default collapsed state */
+}
+
+.feed-items.collapsed {
+    max-height: 0; /* Fully hidden */
+}
+
+.feed-items:not(.collapsed) {
+    max-height: 600px; /* Set max height for expanded feeds */
+    overflow-y: auto; /* Enable scrolling for tall feeds */
+    border: 1px solid #ddd; /* Optional: Add a border for the scrollable list */
+    padding: 10px; /* Add padding inside the scrollable area */
+    background-color: #fff; /* Background for the scrollable area */
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Smooth Scrolling Bar Styles */
+.feed-items::-webkit-scrollbar {
+    width: 8px;
+}
+
+.feed-items::-webkit-scrollbar-thumb {
+    background-color: #bbb;
     border-radius: 4px;
 }
 
-ul li div {
+.feed-items::-webkit-scrollbar-thumb:hover {
+    background-color: #888;
+}
+
+/* Feed Item Styling */
+.feed-item {
+    margin-bottom: 15px;
     padding: 10px;
-    background-color: #f9f9f9;
+    background: #fff;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Post and Comment Links */
+.post,
+.comment {
+    margin: 5px 0;
+}
+
+.label {
+    font-weight: bold;
+    color: #555;
 }
 
 a {
@@ -72,4 +113,51 @@ a {
 
 a:hover {
     text-decoration: underline;
+}
+
+.comment-link {
+    color: #28a745;
+}
+
+.comment-link:hover {
+    color: #218838;
+}
+
+/* Button Styling (Optional: If you add buttons) */
+button {
+    padding: 5px 5px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 8px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+    }
+
+    .feed-container {
+        padding: 10px;
+    }
+
+    h3.feed-url {
+        font-size: 1rem;
+    }
+
+    .feed-item {
+        padding: 8px;
+    }
 }

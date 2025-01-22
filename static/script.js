@@ -95,23 +95,48 @@ async function fetchAllFeeds() {
     feedItemsList.innerHTML = "";
 
     if (data.success && data.data) {
-        data.data.forEach(feedGroup => {
+        data.data.forEach((feedGroup, index) => {
+            // Create a card-like container for each feed
+            const feedContainer = document.createElement("div");
+            feedContainer.classList.add("feed-container");
+
+            // Display the feed URL as a clickable heading
             const urlHeading = document.createElement("h3");
             urlHeading.textContent = `Feed: ${feedGroup.url}`;
-            feedItemsList.appendChild(urlHeading);
+            urlHeading.classList.add("feed-url");
+            urlHeading.setAttribute("data-index", index); // Attach index for toggling
+            feedContainer.appendChild(urlHeading);
 
+            // Create a collapsible list for the feed items
             const itemList = document.createElement("ul");
+            itemList.classList.add("feed-items", "collapsed"); // Add a collapsed class
             feedGroup.items.forEach(item => {
                 const li = document.createElement("li");
+                li.classList.add("feed-item");
+
+                // Format the post and comment links
                 li.innerHTML = `
-                    <strong>${item.title}</strong><br>
-                    <strong>Post:</strong> <a href="${item.link}" target="_blank">${item.link}</a><br>
-                    <strong>Comment:</strong> <a href="${item.comments}" target="_blank">${item.comments}</a>
+                    <div class="post">
+                        <span class="label">Post:</span> 
+                        <a href="${item.link}" target="_blank" class="post-link">${item.title}</a>
+                    </div>
+                    <div class="comment">
+                        <span class="label">Comment:</span> 
+                        <a href="${item.comments}" target="_blank" class="comment-link">
+                            ${item.comments === "No Comments Link" ? "No Comments" : item.comments}
+                        </a>
+                    </div>
                 `;
                 itemList.appendChild(li);
             });
 
-            feedItemsList.appendChild(itemList);
+            feedContainer.appendChild(itemList);
+            feedItemsList.appendChild(feedContainer);
+
+            // Add click event listener to toggle visibility
+            urlHeading.addEventListener("click", () => {
+                itemList.classList.toggle("collapsed");
+            });
         });
     } else {
         alert(data.error || "Failed to fetch feeds");
@@ -120,6 +145,3 @@ async function fetchAllFeeds() {
 
 // Initial fetch for grouped feeds
 fetchAllFeeds();
-
-// Initial fetch of feeds
-// fetchFeeds();
