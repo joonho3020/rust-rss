@@ -1,6 +1,8 @@
 {
   "feeds": [
     "https://hnrss.org/frontpage",
-    "https://chipsandcheese.substack.com/feed"
+    "https://chipsandcheese.substack.com/feed",
+    "https://lobste.rs/rss",
+    "https://www.phoronix.com/rss.php"
   ]
 }
