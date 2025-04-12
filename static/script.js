@@ -100,16 +100,15 @@ async function fetchAllFeeds() {
             const feedContainer = document.createElement("div");
             feedContainer.classList.add("feed-container");
 
-            // Display the feed URL as a clickable heading
+            // Display the feed URL as a heading
             const urlHeading = document.createElement("h3");
             urlHeading.textContent = `Feed: ${feedGroup.url}`;
-            urlHeading.classList.add("feed-url");
-            urlHeading.setAttribute("data-index", index); // Attach index for toggling
             feedContainer.appendChild(urlHeading);
 
-            // Create a collapsible list for the feed items
+            // Create a list for the feed items
             const itemList = document.createElement("ul");
-            itemList.classList.add("feed-items", "collapsed"); // Add a collapsed class
+            itemList.classList.add("feed-items");
+            
             feedGroup.items.forEach(item => {
                 const li = document.createElement("li");
                 li.classList.add("feed-item");
@@ -132,11 +131,6 @@ async function fetchAllFeeds() {
 
             feedContainer.appendChild(itemList);
             feedItemsList.appendChild(feedContainer);
-
-            // Add click event listener to toggle visibility
-            urlHeading.addEventListener("click", () => {
-                itemList.classList.toggle("collapsed");
-            });
         });
     } else {
         alert(data.error || "Failed to fetch feeds");
