@@ -174,18 +174,9 @@
             background-color: #24283b; /* Tokyo Night secondary background */
         }
 
-        .feed-items .item h3 {
-            font-size: 1rem;
-            font-weight: 500;
-            margin: 0 0 5px 0;
-            color: #7aa2f7; /* Tokyo Night blue */
-            line-height: 1.4;
-        }
-
+        .feed-items .item h3,
         .feed-items .item p {
-            font-size: 0.85rem;
-            color: #565f89; /* Tokyo Night secondary text */
-            margin: 0;
+            padding-right: 110px; /* Make space for the button on the right */
         }
 
         .preview h3 {
@@ -245,6 +236,10 @@
             <div class="error" id="error"></div>
             <div class="feed-list">
                 <ul id="feeds"></ul>
+            </div>
+            <div class="error" id="error"></div>
+            <div class="read-later">
+                <ul id="read-later"></ul>
             </div>
         </div>
 
@@ -340,7 +335,7 @@
             }
         }
 
-        // Fetch items for a specific feed
+        // Fetch the feeds from backing json
         async function fetchFeed(index) {
             console.log('Fetching feed items for index:', index);
             try {
@@ -360,7 +355,7 @@
             }
         }
 
-        // Display feed items in the second column
+        // Display the items for the feed
         function displayItems(items, feedIndex) {
             console.log('Displaying items for feed index:', feedIndex, 'Items:', items);
             const itemsDiv = document.getElementById('items');
@@ -377,9 +372,16 @@
                 div.className = 'item';
                 div.innerHTML = `
                     <h3>${item.title}</h3>
-                    <p>${item.comments !== 'No Comments Link' ? `<a href="${item.comments}" target="_blank">Comments</a>` : ''}</p>
+                    <p>
+                        ${item.comments !== 'No Comments Link' ? `<a href="${item.comments}" target="_blank">Comments</a>` : ''}
+                        <button class="save-read-later" onclick="saveReadLater(event, ${feedIndex}, ${itemIndex})">Save</button>
+                    </p>
                 `;
-                div.onclick = () => showPreview(item, feedIndex, itemIndex);
+                div.onclick = (e) => {
+                    if (!e.target.classList.contains('save-read-later')) {
+                        showPreview(item, feedIndex, itemIndex);
+                    }
+                };
                 itemsDiv.appendChild(div);
             });
         }
@@ -437,10 +439,118 @@
             }
         }
 
+        // save item to read later
+        async function saveReadLater(event, feedIndex, itemIndex) {
+            event.preventDefault(); // Prevent any default behavior (e.g., form submission)
+            event.stopPropagation(); // Prevent triggering preview
+            console.log('Saving to read later: feed index:', feedIndex, 'item index:', itemIndex);
+            try {
+                const response = await fetch(`${API_BASE}/fetch/${feedIndex}`);
+                const result = await response.json();
+
+                if (result.success && result.data[itemIndex]) {
+                    const item = result.data[itemIndex];
+                    const saveResponse = await fetch(`${API_BASE}/read_later`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ item })
+                    });
+                    const saveResult = await saveResponse.json();
+
+                    if (saveResult.success) {
+                        loadReadLater(); // Refresh read later list
+                    } else {
+                        showError(saveResult.error || 'Failed to save to read later');
+                    }
+                } else {
+                    showError('Failed to fetch item details');
+                }
+            } catch (error) {
+                console.error('Error saving to read later:', error);
+                showError('Error saving to read later');
+            }
+        }
+
+        // New function to load and display read later items
+        async function loadReadLater() {
+            console.log('Loading read later items...');
+            try {
+                const response = await fetch(`${API_BASE}/read_later`);
+                const result = await response.json();
+                console.log('Fetched read later items:', result);
+
+                if (result.success) {
+                    const readLaterList = document.getElementById('read-later');
+                    readLaterList.innerHTML = '';
+                    result.data.forEach((item, index) => {
+                        console.log(`Adding read later item to UI: ${item.title} (index: ${index})`);
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <span onclick="showReadLaterPreview(${index})">${item.title}</span>
+                            <button onclick="removeReadLater(${index})">Remove</button>
+                        `;
+                        readLaterList.appendChild(li);
+                    });
+                } else {
+                    showError(result.error || 'Failed to load read later items');
+                }
+            } catch (error) {
+                console.error('Error fetching read later items:', error);
+                showError('Error fetching read later items');
+            }
+        }
+
+        // New function to show read later item preview
+        function showReadLaterPreview(index) {
+            console.log('Showing read later preview for index:', index);
+            fetch(`${API_BASE}/read_later`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.data[index]) {
+                        const item = result.data[index];
+                        const previewDiv = document.getElementById('preview');
+                        previewDiv.innerHTML = `
+                            <h3>${item.title}</h3>
+                            <p><a href="${item.link}" target="_blank">Open full article</a></p>
+                            <p>${item.description || 'No content available.'}</p>
+                            ${item.comments !== 'No Comments Link' ? `<p><a href="${item.comments}" target="_blank">Comments</a></p>` : ''}
+                        `;
+                    } else {
+                        showError('Failed to load read later item');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error showing read later preview:', error);
+                    showError('Error showing read later preview');
+                });
+        }
+
+        // New function to remove read later item
+        async function removeReadLater(index) {
+            console.log('Removing read later item at index:', index);
+            try {
+                const response = await fetch(`${API_BASE}/read_later/${index}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    loadReadLater(); // Refresh read later list
+                } else {
+                    showError(result.error || 'Failed to remove read later item');
+                }
+            } catch (error) {
+                console.error('Error removing read later item:', error);
+                showError('Error removing read later item');
+            }
+        }
+
+
         // Load feeds when page loads
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Page loaded, initializing feeds');
             loadFeeds();
+            loadReadLater();
         });
     </script>
 </body>

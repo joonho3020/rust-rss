@@ -4,5 +4,13 @@
     "https://chipsandcheese.substack.com/feed",
     "https://lobste.rs/rss",
     "https://www.phoronix.com/rss.php"
+  ],
+  "read_later": [
+    {
+      "title": "Dynamic Register Allocation on AMD's RDNA 4 GPU Architecture",
+      "link": "https://chipsandcheese.com/p/dynamic-register-allocation-on-amds",
+      "comments": "No Comments Link",
+      "description": "Modern GPUs often make a difficult tradeoff between occupancy (active thread count) and register count available to each thread."
+    }
   ]
 }

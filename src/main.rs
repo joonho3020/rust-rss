@@ -20,6 +20,7 @@ type AppState = Arc<Mutex<PersistentState>>;
 #[derive(Serialize, Deserialize, Default, Clone)]
 struct PersistentState {
     feeds: Vec<String>,
+    read_later: Vec<FeedItem>,
 }
 
 impl PersistentState {
@@ -61,7 +62,7 @@ struct ApiResponse<T> {
     error: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 struct FeedItem {
     title: String,
     link: String,
@@ -78,6 +79,77 @@ async fn list_feeds(State(state): State<AppState>) -> Json<ApiResponse<Vec<Strin
         data: Some(persistent_state.feeds.clone()),
         error: None,
     })
+}
+
+// New endpoint to list read later items
+async fn list_read_later(State(state): State<AppState>) -> Json<ApiResponse<Vec<FeedItem>>> {
+    let persistent_state = state.lock().await;
+    info!("Listing read later items. Number of items: {}", persistent_state.read_later.len());
+    Json(ApiResponse {
+        success: true,
+        data: Some(persistent_state.read_later.clone()),
+        error: None,
+    })
+}
+
+// New endpoint to add item to read later
+#[derive(Deserialize)]
+struct AddReadLaterPayload {
+    item: FeedItem,
+}
+
+async fn add_read_later(
+    State(state): State<AppState>,
+    Json(payload): Json<AddReadLaterPayload>,
+) -> Json<ApiResponse<()>> {
+    let mut persistent_state = state.lock().await;
+    info!("Attempting to add item to read later: {}", payload.item.title);
+
+    // Check if item already exists
+    if persistent_state.read_later.iter().any(|item| item.link == payload.item.link) {
+        info!("Item already in read later: {}", payload.item.title);
+        return Json(ApiResponse {
+            success: false,
+            data: None,
+            error: Some("Item already in read later list!".to_string()),
+        });
+    }
+
+    persistent_state.read_later.push(payload.item);
+    persistent_state.save_to_file();
+    info!("Successfully added item to read later: {}", persistent_state.read_later.last().unwrap().title);
+    Json(ApiResponse {
+        success: true,
+        data: None,
+        error: None,
+    })
+}
+
+// New endpoint to remove item from read later
+async fn remove_read_later(
+    State(state): State<AppState>,
+    Path(index): Path<usize>,
+) -> Json<ApiResponse<()>> {
+    let mut persistent_state = state.lock().await;
+    info!("Attempting to remove read later item at index: {}", index);
+
+    if index < persistent_state.read_later.len() {
+        let removed_item = persistent_state.read_later.remove(index);
+        persistent_state.save_to_file();
+        info!("Successfully removed item from read later: {}", removed_item.title);
+        Json(ApiResponse {
+            success: true,
+            data: None,
+            error: None,
+        })
+    } else {
+        error!("Invalid read later item index: {}", index);
+        Json(ApiResponse {
+            success: false,
+            data: None,
+            error: Some("Invalid item index!".to_string()),
+        })
+    }
 }
 
 #[derive(Deserialize)]
@@ -304,6 +376,8 @@ async fn main() {
         .route("/feeds", get(list_feeds).post(add_feed))
         .route("/fetch/:index", get(fetch_feed))
         .route("/fetch_content/:feed_index/:item_index", get(fetch_item_content))
+        .route("/read_later", get(list_read_later).post(add_read_later))
+        .route("/read_later/:index", delete(remove_read_later))
         .with_state(state);
 
     let addr = "127.0.0.1:3000".parse().unwrap();
