@@ -293,6 +293,12 @@
                         `;
                         feedsList.appendChild(li);
                     });
+
+                  // Automatically fetch the first feed if available
+                    if (result.data.length > 0) {
+                        console.log('Automatically fetching first feed at index 0');
+                        fetchFeed(0);
+                    }
                 } else {
                     showError(result.error || 'Failed to load feeds');
                 }
@@ -331,30 +337,6 @@
             } catch (error) {
                 console.error('Error adding feed:', error);
                 showError('Error adding feed');
-            }
-        }
-
-        // Remove a feed
-        async function removeFeed(index) {
-            console.log('Removing feed at index:', index);
-            try {
-                const response = await fetch(`${API_BASE}/feeds/${index}`, {
-                    method: 'DELETE'
-                });
-                console.log('Remove feed response status:', response.status);
-                const result = await response.json();
-                console.log('Remove feed result:', result);
-
-                if (result.success) {
-                    loadFeeds();
-                    document.getElementById('items').innerHTML = '';
-                    document.getElementById('preview').innerHTML = '';
-                } else {
-                    showError(result.error || 'Failed to remove feed');
-                }
-            } catch (error) {
-                console.error('Error removing feed:', error);
-                showError('Error removing feed');
             }
         }
 
@@ -426,17 +408,16 @@
                     <p><a href="${item.link}" target="_blank">Open full article</a></p>
                 `;
 
-                if (contentResult.success && contentResult.data) {
-                    previewDiv.innerHTML += `<p>${contentResult.data}</p>`;
-                } else {
-                    // Fall back to description if content fetch fails
-                    if (item.description) {
-                        console.log('Falling back to description for preview');
-                        previewDiv.innerHTML += `<p>${item.description}</p>`;
-                    } else {
-                        console.log('No content or description available');
-                        previewDiv.innerHTML += `<p>No content available.</p>`;
+                if (item.description) {
+                    console.log('Falling back to description for preview');
+                    previewDiv.innerHTML += `<p>${item.description}</p>`;
+
+                    if (contentResult.success && contentResult.data) {
+                        previewDiv.innerHTML += `<p>${contentResult.data}</p>`;
                     }
+                } else {
+                    console.log('No content or description available');
+                    previewDiv.innerHTML += `<p>No content available.</p>`;
                 }
 
                 // Add comments link if available
