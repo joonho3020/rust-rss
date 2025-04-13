@@ -7,10 +7,22 @@
   ],
   "read_later": [
     {
-      "title": "Dynamic Register Allocation on AMD's RDNA 4 GPU Architecture",
-      "link": "https://chipsandcheese.com/p/dynamic-register-allocation-on-amds",
+      "title": "tagged token architecture",
+      "link": "https://csg.csail.mit.edu/pubs/memos/Memo-229/Memo-229.pdf",
       "comments": "No Comments Link",
-      "description": "Modern GPUs often make a difficult tradeoff between occupancy (active thread count) and register count available to each thread."
+      "description": "Custom link added by user"
+    },
+    {
+      "title": "Manchester dataflow computer",
+      "link": "https://courses.cs.washington.edu/courses/csep548/05sp/gurd-cacm85-prototype.pdf",
+      "comments": "No Comments Link",
+      "description": "Custom link added by user"
+    },
+    {
+      "title": "Anton MD simulation machine",
+      "link": "https://web.archive.org/web/20120423063209/http://cacs.usc.edu/education/cs653/Shaw-msMD-SC09.pdf",
+      "comments": "No Comments Link",
+      "description": "Custom link added by user"
     }
   ]
 }

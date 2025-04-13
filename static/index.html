@@ -222,6 +222,15 @@
         .column::-webkit-scrollbar-thumb:hover {
             background: #565f89; /* Tokyo Night secondary text */
         }
+
+        .save-read-later {
+          border: none;
+          padding: 2px 2px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -231,14 +240,20 @@
             <h2>Saved Feeds</h2>
             <div class="feed-controls">
                 <input type="text" id="feedUrl" placeholder="Enter RSS feed URL">
-                <button onclick="addFeed()">Add Feed</button>
+                <button class="save-read-later" onclick="addFeed()">Add Feed</button>
             </div>
             <div class="error" id="error"></div>
             <div class="feed-list">
                 <ul id="feeds"></ul>
             </div>
-            <div class="error" id="error"></div>
             <div class="read-later">
+                <h2>Read Later</h2>
+                <div class="custom-link-controls">
+                    <input type="text" id="customTitle" placeholder="Enter title">
+                    <input type="text" id="customUrl" placeholder="Enter URL">
+                    <button class="save-read-later" onclick="addCustomLink()">Add Link</button>
+                </div>
+                <div class="error" id="error"></div>
                 <ul id="read-later"></ul>
             </div>
         </div>
@@ -373,8 +388,8 @@
                 div.innerHTML = `
                     <h3>${item.title}</h3>
                     <p>
-                        ${item.comments !== 'No Comments Link' ? `<a href="${item.comments}" target="_blank">Comments</a>` : ''}
                         <button class="save-read-later" onclick="saveReadLater(event, ${feedIndex}, ${itemIndex})">Save</button>
+                        ${item.comments !== 'No Comments Link' ? `<a href="${item.comments}" target="_blank">Comments</a>` : ''}
                     </p>
                 `;
                 div.onclick = (e) => {
@@ -441,8 +456,8 @@
 
         // save item to read later
         async function saveReadLater(event, feedIndex, itemIndex) {
-            event.preventDefault(); // Prevent any default behavior (e.g., form submission)
-            event.stopPropagation(); // Prevent triggering preview
+            event.preventDefault();
+            event.stopPropagation();
             console.log('Saving to read later: feed index:', feedIndex, 'item index:', itemIndex);
             try {
                 const response = await fetch(`${API_BASE}/fetch/${feedIndex}`);
@@ -453,12 +468,12 @@
                     const saveResponse = await fetch(`${API_BASE}/read_later`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ item })
+                        body: JSON.stringify({ item }) // Send item as before
                     });
                     const saveResult = await saveResponse.json();
 
                     if (saveResult.success) {
-                        loadReadLater(); // Refresh read later list
+                        loadReadLater();
                     } else {
                         showError(saveResult.error || 'Failed to save to read later');
                     }
@@ -470,6 +485,50 @@
                 showError('Error saving to read later');
             }
         }
+
+        // New function to add a custom link
+        async function addCustomLink() {
+            const titleInput = document.getElementById('customTitle');
+            const urlInput = document.getElementById('customUrl');
+            const title = titleInput.value.trim();
+            const url = urlInput.value.trim();
+
+            if (!title || !url) {
+                showError('Please enter both a title and a URL');
+                return;
+            }
+
+            // Basic URL validation
+            try {
+                new URL(url);
+            } catch (e) {
+                showError('Please enter a valid URL');
+                return;
+            }
+
+            console.log('Adding custom link:', title, url);
+            try {
+                const response = await fetch(`${API_BASE}/read_later`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, url }) // Send title and url instead of item
+                });
+                const result = await response.json();
+                console.log('Add custom link result:', result);
+
+                if (result.success) {
+                    titleInput.value = '';
+                    urlInput.value = '';
+                    loadReadLater();
+                } else {
+                    showError(result.error || 'Failed to add custom link');
+                }
+            } catch (error) {
+                console.error('Error adding custom link:', error);
+                showError('Error adding custom link');
+            }
+        }
+
 
         // New function to load and display read later items
         async function loadReadLater() {
@@ -487,7 +546,7 @@
                         const li = document.createElement('li');
                         li.innerHTML = `
                             <span onclick="showReadLaterPreview(${index})">${item.title}</span>
-                            <button onclick="removeReadLater(${index})">Remove</button>
+                            <button class="save-read-later" onclick="removeReadLater(${index})">Remove</button>
                         `;
                         readLaterList.appendChild(li);
                     });

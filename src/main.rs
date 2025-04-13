@@ -95,7 +95,9 @@ async fn list_read_later(State(state): State<AppState>) -> Json<ApiResponse<Vec<
 // New endpoint to add item to read later
 #[derive(Deserialize)]
 struct AddReadLaterPayload {
-    item: FeedItem,
+    item: Option<FeedItem>, // Optional for RSS feed items
+    title: Option<String>,  // Optional for custom link title
+    url: Option<String>,    // Optional for custom link URL
 }
 
 async fn add_read_later(
@@ -103,11 +105,39 @@ async fn add_read_later(
     Json(payload): Json<AddReadLaterPayload>,
 ) -> Json<ApiResponse<()>> {
     let mut persistent_state = state.lock().await;
-    info!("Attempting to add item to read later: {}", payload.item.title);
+
+    println!("add_read_later called");
+
+    // Determine the item to add based on the payload
+    let new_item = match (payload.item, payload.title, payload.url) {
+        (Some(item), None, None) => {
+            // Adding an RSS feed item
+            info!("Attempting to add RSS feed item to read later: {}", item.title);
+            item
+        }
+        (None, Some(title), Some(url)) => {
+            // Adding a custom link
+            info!("Attempting to add custom link to read later: {}", title);
+            FeedItem {
+                title,
+                link: url,
+                comments: "No Comments Link".to_string(), // Default for custom links
+                description: "Custom link added by user".to_string(), // Default description
+            }
+        }
+        _ => {
+            error!("Invalid payload for adding to read later");
+            return Json(ApiResponse {
+                success: false,
+                data: None,
+                error: Some("Invalid payload: provide either an item or both title and URL".to_string()),
+            });
+        }
+    };
 
     // Check if item already exists
-    if persistent_state.read_later.iter().any(|item| item.link == payload.item.link) {
-        info!("Item already in read later: {}", payload.item.title);
+    if persistent_state.read_later.iter().any(|item| item.link == new_item.link) {
+        info!("Item already in read later: {}", new_item.title);
         return Json(ApiResponse {
             success: false,
             data: None,
@@ -115,7 +145,7 @@ async fn add_read_later(
         });
     }
 
-    persistent_state.read_later.push(payload.item);
+    persistent_state.read_later.push(new_item);
     persistent_state.save_to_file();
     info!("Successfully added item to read later: {}", persistent_state.read_later.last().unwrap().title);
     Json(ApiResponse {
