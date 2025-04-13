@@ -10,8 +10,6 @@ use tokio::sync::Mutex;
 use rss::Channel;
 use reqwest;
 use tower_http::services::fs::ServeDir; // For serving static files
-use std::collections::HashMap;
-
 
 // Application state: a list of RSS feed URLs
 type AppState = Arc<Mutex<PersistentState>>;
@@ -120,7 +118,8 @@ struct FeedGroup {
 struct FeedItem {
     title: String,
     link: String,
-    comments: String, // New field for comments link
+    comments: String,
+    description: String,
 }
 
 // Route to fetch and display items from a specific RSS feed
@@ -143,7 +142,7 @@ async fn fetch_feed(
                             title: item.title().unwrap_or("No Title").to_string(),
                             link: item.link().unwrap_or("No Link").to_string(),
                             comments: item.comments().unwrap_or("No Comments Link").to_string(),
-
+                            description: item.description().unwrap_or("No Description").to_string(),
                         })
                         .collect();
 
@@ -178,56 +177,6 @@ async fn fetch_feed(
 }
 
 
-// Route to fetch and group RSS items by feed URL
-async fn fetch_all_feeds(State(state): State<AppState>) -> Json<ApiResponse<Vec<FeedGroup>>> {
-    let persistent_state = state.lock().await;
-
-    let mut feed_groups: Vec<FeedGroup> = Vec::new();
-
-    for url in persistent_state.feeds.iter() {
-        match reqwest::get(url).await {
-            Ok(response) => {
-                let body = response.text().await.unwrap_or_default();
-                if let Ok(channel) = Channel::read_from(body.as_bytes()) {
-                    // Extract items with title and link
-                    let items: Vec<FeedItem> = channel
-                        .items()
-                        .iter()
-                        .map(|item| FeedItem {
-                            title: item.title().unwrap_or("No Title").to_string(),
-                            link: item.link().unwrap_or("No Link").to_string(),
-                            comments: item.comments().unwrap_or("No Comments Link").to_string(),
-                        })
-                        .collect();
-
-                    feed_groups.push(FeedGroup {
-                        url: url.clone(),
-                        items,
-                    });
-                } else {
-                    feed_groups.push(FeedGroup {
-                        url: url.clone(),
-                        items: vec![],
-                    });
-                }
-            }
-            Err(_) => {
-                feed_groups.push(FeedGroup {
-                    url: url.clone(),
-                    items: vec![],
-                });
-            }
-        }
-    }
-
-    Json(ApiResponse {
-        success: true,
-        data: Some(feed_groups),
-        error: None,
-    })
-}
-
-
 #[tokio::main]
 async fn main() {
     // Shared application state
@@ -239,7 +188,6 @@ async fn main() {
         .route("/feeds", get(list_feeds).post(add_feed)) // GET: list feeds, POST: add feed
         .route("/feeds/:index", delete(remove_feed)) // DELETE: remove feed by index
         .route("/fetch/:index", get(fetch_feed)) // GET: fetch feed items by index
-        .route("/fetch_all", get(fetch_all_feeds)) // GET: route for grouped feeds
         .with_state(state);
 
     // Start the Axum server
