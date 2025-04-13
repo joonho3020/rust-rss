@@ -5,12 +5,12 @@ use axum::{
     Router,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use rss::Channel;
 use reqwest;
 use tower_http::services::fs::ServeDir;
-use std::collections::HashMap;
 use scraper::{Html, Selector};
 use tracing::{info, error, debug}; // Add tracing imports
 
@@ -53,6 +53,98 @@ impl PersistentState {
             Err(e) => error!("Failed to serialize feeds to JSON: {}", e),
         }
     }
+}
+
+#[derive(Deserialize)]
+struct SummarizePayload {
+    content: String,
+}
+
+async fn summarize_content(
+    State(state): State<AppState>,
+    Json(payload): Json<SummarizePayload>,
+) -> Json<ApiResponse<String>> {
+    info!("Received request to summarize content");
+
+    // Load OpenAI API key from environment
+    let api_key = match std::env::var("OPENAI_API_KEY") {
+        Ok(key) => key,
+        Err(_) => {
+            error!("OPENAI_API_KEY environment variable not set");
+            return Json(ApiResponse {
+                success: false,
+                data: None,
+                error: Some("OpenAI API key not configured".to_string()),
+            });
+        }
+    };
+
+    // Prepare the OpenAI API request
+    let client = reqwest::Client::new();
+    let url = "https://api.openai.com/v1/chat/completions";
+    let prompt = format!("Summarize the following article:\n\n{}", payload.content);
+
+    let body = json!({
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant that summarizes text."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7,
+    });
+
+    let response = match client
+        .post(url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send()
+        .await
+    {
+        Ok(resp) => resp,
+        Err(e) => {
+            error!("Failed to send request to OpenAI API: {}", e);
+            return Json(ApiResponse {
+                success: false,
+                data: None,
+                error: Some("Failed to communicate with OpenAI API".to_string()),
+            });
+        }
+    };
+
+    // Parse the OpenAI API response
+    let response_json: serde_json::Value = match response.json().await {
+        Ok(json) => json,
+        Err(e) => {
+            error!("Failed to parse OpenAI API response: {}", e);
+            return Json(ApiResponse {
+                success: false,
+                data: None,
+                error: Some("Failed to parse OpenAI API response".to_string()),
+            });
+        }
+    };
+
+    let summary = response_json["choices"][0]["message"]["content"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
+
+    if summary.is_empty() {
+        error!("OpenAI API returned an empty summary");
+        return Json(ApiResponse {
+            success: false,
+            data: None,
+            error: Some("Failed to generate summary".to_string()),
+        });
+    }
+
+    info!("Successfully generated summary");
+    Json(ApiResponse {
+        success: true,
+        data: Some(summary),
+        error: None,
+    })
 }
 
 #[derive(Serialize)]
@@ -408,6 +500,7 @@ async fn main() {
         .route("/fetch_content/:feed_index/:item_index", get(fetch_item_content))
         .route("/read_later", get(list_read_later).post(add_read_later))
         .route("/read_later/:index", delete(remove_read_later))
+        .route("/summarize", post(summarize_content))
         .with_state(state);
 
     let addr = "127.0.0.1:3000".parse().unwrap();

@@ -231,6 +231,47 @@
           display: inline-block;
           font-size: 16px;
         }
+
+        .summarize-button {
+            padding: 8px 16px;
+            background-color: #7aa2f7; /* Tokyo Night blue */
+            color: #1a1b26;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .summarize-button:hover {
+            background-color: #6183d6; /* Darker Tokyo Night blue */
+            transform: translateY(-1px);
+        }
+
+        .summarize-button:active {
+            transform: translateY(0);
+        }
+
+        /* Style for the summary section */
+        .summary {
+            background-color: #24283b; /* Tokyo Night secondary background */
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .summary h4 {
+            color: #c0caf5; /* Tokyo Night lighter text */
+            margin-bottom: 8px;
+        }
+
+        .summary p {
+            color: #a9b1d6; /* Tokyo Night primary text */
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -268,6 +309,11 @@
         <div class="column column-3">
             <h2>Preview</h2>
             <div class="preview" id="preview"></div>
+            <button class="summarize-button" id="summarizeButton" style="display: none;" onclick="summarizeContent()">Summarize</button>
+            <div class="summary" id="summary" style="display: none;">
+                <h4>Summary</h4>
+                <p id="summaryText"></p>
+            </div>
         </div>
     </div>
 
@@ -401,25 +447,28 @@
             });
         }
 
-        // Show preview in the third column
+        // Modified showPreview to enable summarize button
         async function showPreview(item, feedIndex, itemIndex) {
             console.log('Showing preview for feed index:', feedIndex, 'item index:', itemIndex, 'Item:', item);
             const previewDiv = document.getElementById('preview');
+            const summarizeButton = document.getElementById('summarizeButton');
+            const summaryDiv = document.getElementById('summary');
+            const summaryText = document.getElementById('summaryText');
+
             previewDiv.innerHTML = `
                 <h3>${item.title}</h3>
                 <p><a href="${item.link}" target="_blank">Open full article</a></p>
                 <p>Loading content...</p>
             `;
+            summarizeButton.style.display = 'none'; // Hide until content is loaded
+            summaryDiv.style.display = 'none'; // Hide summary initially
 
             try {
-                // Fetch the webpage content on-demand
-                console.log('Fetching content for feed index:', feedIndex, 'item index:', itemIndex);
                 const contentResponse = await fetch(`${API_BASE}/fetch_content/${feedIndex}/${itemIndex}`);
                 console.log('Fetch content response status:', contentResponse.status);
-                const contentResult = await contentResponse.json();
+                const contentResult = await response.json();
                 console.log('Fetched content:', contentResult);
 
-                // Refresh the preview with the fetched content
                 previewDiv.innerHTML = `
                     <h3>${item.title}</h3>
                     <p><a href="${item.link}" target="_blank">Open full article</a></p>
@@ -431,13 +480,14 @@
 
                     if (contentResult.success && contentResult.data) {
                         previewDiv.innerHTML += `<p>${contentResult.data}</p>`;
+                        summarizeButton.style.display = 'block'; // Show summarize button
+                        summarizeButton.dataset.content = contentResult.data; // Store content for summarization
                     }
                 } else {
                     console.log('No content or description available');
                     previewDiv.innerHTML += `<p>No content available.</p>`;
                 }
 
-                // Add comments link if available
                 if (item.comments !== 'No Comments Link') {
                     previewDiv.innerHTML += `<p><a href="${item.comments}" target="_blank">Comments</a></p>`;
                 }
@@ -451,6 +501,39 @@
                 if (item.comments !== 'No Comments Link') {
                     previewDiv.innerHTML += `<p><a href="${item.comments}" target="_blank">Comments</a></p>`;
                 }
+            }
+        }
+
+        // New function to summarize content
+        async function summarizeContent() {
+            const summarizeButton = document.getElementById('summarizeButton');
+            const summaryDiv = document.getElementById('summary');
+            const summaryText = document.getElementById('summaryText');
+            const content = summarizeButton.dataset.content;
+
+            if (!content) {
+                showError('No content available to summarize');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/summarize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                const result = await response.json();
+                console.log('Summarization result:', result);
+
+                if (result.success && result.data) {
+                    summaryText.textContent = result.data;
+                    summaryDiv.style.display = 'block';
+                } else {
+                    showError(result.error || 'Failed to summarize content');
+                }
+            } catch (error) {
+                console.error('Error summarizing content:', error);
+                showError('Error summarizing content');
             }
         }
 
