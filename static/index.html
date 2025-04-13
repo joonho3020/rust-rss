@@ -64,28 +64,28 @@
 </head>
 <body>
     <h1>RSS Feed Reader</h1>
-    
-    <div class="feed-controls">
-        <input type="text" id="feedUrl" placeholder="Enter RSS feed URL">
-        <button onclick="addFeed()">Add Feed</button>
-        <button onclick="fetchAllFeeds()">Fetch All Feeds</button>
-    </div>
-    
+
     <div class="error" id="error"></div>
-    
+
     <div class="feed-list">
         <h2>Saved Feeds</h2>
         <ul id="feeds"></ul>
     </div>
-    
+
     <div class="feed-items">
         <h2>Feed Items</h2>
         <div id="items"></div>
     </div>
 
+    <div class="feed-controls">
+        <input type="text" id="feedUrl" placeholder="Enter RSS feed URL">
+        <button onclick="addFeed()">Add Feed</button>
+        <button onclick="fetchAllFeeds()">Fetch All Feeds</button>
+    </div>
+
     <script>
         const API_BASE = 'http://127.0.0.1:3000';
-        
+
         // Display error messages
         function showError(message) {
             document.getElementById('error').textContent = message;
