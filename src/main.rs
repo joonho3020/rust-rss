@@ -9,7 +9,8 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use rss::Channel;
 use reqwest;
-use tower_http::services::fs::ServeDir; // For serving static files
+use tower_http::services::fs::ServeDir;
+use scraper::{Html, Selector};
 
 // Application state: a list of RSS feed URLs
 type AppState = Arc<Mutex<PersistentState>>;
@@ -22,15 +23,13 @@ struct PersistentState {
 impl PersistentState {
     const FILE_PATH: &'static str = "feeds.json";
 
-    // Load feeds from file (called on server startup)
     fn load_from_file() -> Self {
         match std::fs::read_to_string(Self::FILE_PATH) {
             Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
-            Err(_) => Self::default(), // Return empty state if the file doesn't exist
+            Err(_) => Self::default(),
         }
     }
 
-    // Save feeds to file (called after every change)
     fn save_to_file(&self) {
         if let Ok(json) = serde_json::to_string_pretty(self) {
             let _ = std::fs::write(Self::FILE_PATH, json);
@@ -38,12 +37,20 @@ impl PersistentState {
     }
 }
 
-// JSON response struct for API responses
 #[derive(Serialize)]
 struct ApiResponse<T> {
     success: bool,
     data: Option<T>,
     error: Option<String>,
+}
+
+#[derive(Serialize)]
+struct FeedItem {
+    title: String,
+    link: String,
+    comments: String,
+    description: String,
+    content: Option<String>, // New field for webpage content
 }
 
 // Route to list all RSS feeds
@@ -56,7 +63,6 @@ async fn list_feeds(State(state): State<AppState>) -> Json<ApiResponse<Vec<Strin
     })
 }
 
-// Route to add a new RSS feed
 #[derive(Deserialize)]
 struct AddFeedPayload {
     url: String,
@@ -77,7 +83,7 @@ async fn add_feed(
     }
 
     persistent_state.feeds.push(payload.url.clone());
-    persistent_state.save_to_file(); // Save feeds to file
+    persistent_state.save_to_file();
     Json(ApiResponse {
         success: true,
         data: None,
@@ -93,7 +99,7 @@ async fn remove_feed(
 
     if index < persistent_state.feeds.len() {
         persistent_state.feeds.remove(index);
-        persistent_state.save_to_file(); // Save updated feeds to file
+        persistent_state.save_to_file();
         return Json(ApiResponse {
             success: true,
             data: None,
@@ -108,21 +114,45 @@ async fn remove_feed(
     })
 }
 
-#[derive(Serialize)]
-struct FeedGroup {
-    url: String,
-    items: Vec<FeedItem>,
+// Helper function to fetch and extract content from a webpage
+async fn fetch_webpage_content(url: &str) -> Option<String> {
+    // Fetch the webpage
+    let response = match reqwest::get(url).await {
+        Ok(resp) => resp,
+        Err(_) => return None,
+    };
+
+    let body = match response.text().await {
+        Ok(text) => text,
+        Err(_) => return None,
+    };
+
+    // Parse the HTML
+    let document = Html::parse_document(&body);
+
+    // Try to extract the main content (e.g., from <article>, <main>, or <p> tags)
+    let selectors = [
+        Selector::parse("article").ok(),
+        Selector::parse("main").ok(),
+        Selector::parse("div.content").ok(),
+        Selector::parse("div.post").ok(),
+        Selector::parse("p").ok(),
+    ];
+
+    for selector in selectors.iter().flatten() {
+        if let Some(element) = document.select(selector).next() {
+            // Extract text content and clean it up
+            let text = element.text().collect::<Vec<_>>().join(" ");
+            let cleaned_text = text.trim().replace("\n", " ").replace("\r", "");
+            if !cleaned_text.is_empty() {
+                return Some(cleaned_text);
+            }
+        }
+    }
+
+    None
 }
 
-#[derive(Serialize)]
-struct FeedItem {
-    title: String,
-    link: String,
-    comments: String,
-    description: String,
-}
-
-// Route to fetch and display items from a specific RSS feed
 async fn fetch_feed(
     State(state): State<AppState>,
     Path(index): Path<usize>,
@@ -134,17 +164,24 @@ async fn fetch_feed(
             Ok(response) => {
                 let body = response.text().await.unwrap_or_default();
                 if let Ok(channel) = Channel::read_from(body.as_bytes()) {
-                    // Extract items with title and link
-                    let items: Vec<FeedItem> = channel
-                        .items()
-                        .iter()
-                        .map(|item| FeedItem {
+                    let mut items: Vec<FeedItem> = Vec::new();
+
+                    for item in channel.items() {
+                        // Fetch webpage content if a link is available
+                        let content = if let Some(link) = item.link() {
+                            fetch_webpage_content(link).await
+                        } else {
+                            None
+                        };
+
+                        items.push(FeedItem {
                             title: item.title().unwrap_or("No Title").to_string(),
                             link: item.link().unwrap_or("No Link").to_string(),
                             comments: item.comments().unwrap_or("No Comments Link").to_string(),
                             description: item.description().unwrap_or("No Description").to_string(),
-                        })
-                        .collect();
+                            content,
+                        });
+                    }
 
                     return Json(ApiResponse {
                         success: true,
@@ -176,21 +213,17 @@ async fn fetch_feed(
     })
 }
 
-
 #[tokio::main]
 async fn main() {
-    // Shared application state
     let state = Arc::new(Mutex::new(PersistentState::load_from_file()));
 
-    // Define the routes
     let app = Router::new()
-        .nest_service("/", get_service(ServeDir::new("./static"))) // Serve frontend files
-        .route("/feeds", get(list_feeds).post(add_feed)) // GET: list feeds, POST: add feed
-        .route("/feeds/:index", delete(remove_feed)) // DELETE: remove feed by index
-        .route("/fetch/:index", get(fetch_feed)) // GET: fetch feed items by index
+        .nest_service("/", get_service(ServeDir::new("./static")))
+        .route("/feeds", get(list_feeds).post(add_feed))
+        .route("/feeds/:index", delete(remove_feed))
+        .route("/fetch/:index", get(fetch_feed))
         .with_state(state);
 
-    // Start the Axum server
     let addr = "127.0.0.1:3000".parse().unwrap();
     println!("Server running at http://{}", addr);
     axum::Server::bind(&addr)

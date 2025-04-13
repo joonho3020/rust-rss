@@ -123,11 +123,6 @@
         .preview a:hover {
             text-decoration: underline;
         }
-        .preview img {
-            max-width: 100%;
-            height: auto;
-            margin: 10px 0;
-        }
     </style>
 </head>
 <body>
@@ -280,20 +275,28 @@
             const previewDiv = document.getElementById('preview');
             previewDiv.innerHTML = `
                 <h3>${item.title}</h3>
-                <p>${item.description}</p>
                 <p><a href="${item.link}" target="_blank">Open full article</a></p>
             `;
 
-            // Attempt to fetch a basic preview (e.g., description or content if available)
             try {
                 const response = await fetch(`${API_BASE}/fetch/${feedIndex}`);
                 const result = await response.json();
                 if (result.success && result.data[itemIndex]) {
                     const feedItem = result.data[itemIndex];
-                    // Note: The RSS crate used in your backend doesn't directly expose description/content
-                    // You may need to modify the backend to include these fields in FeedItem
-                    // For now, we'll just show the title and link
-                    previewDiv.innerHTML += `<p>Loading preview...</p>`;
+                    // Display the webpage content if available, otherwise fall back to description
+                    if (feedItem.content) {
+                        previewDiv.innerHTML += `<p>${feedItem.content}</p>`;
+                    } else if (feedItem.description) {
+                        previewDiv.innerHTML += `<p>${feedItem.description}</p>`;
+                    } else {
+                        previewDiv.innerHTML += `<p>No content available.</p>`;
+                    }
+                    // Add comments link if available
+                    if (feedItem.comments !== 'No Comments Link') {
+                        previewDiv.innerHTML += `<p><a href="${feedItem.comments}" target="_blank">Comments</a></p>`;
+                    }
+                } else {
+                    previewDiv.innerHTML += `<p>Unable to load preview content.</p>`;
                 }
             } catch (error) {
                 previewDiv.innerHTML += `<p>Unable to load preview content.</p>`;
