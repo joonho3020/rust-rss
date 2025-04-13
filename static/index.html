@@ -158,6 +158,7 @@
 
         // Display error messages
         function showError(message) {
+            console.error('Error:', message);
             document.getElementById('error').textContent = message;
             setTimeout(() => {
                 document.getElementById('error').textContent = '';
@@ -166,17 +167,21 @@
 
         // Fetch and display all saved feeds
         async function loadFeeds() {
+            console.log('Loading feeds...');
             try {
                 const response = await fetch(`${API_BASE}/feeds`);
+                console.log('Fetch /feeds response status:', response.status);
                 const result = await response.json();
+                console.log('Fetched feeds:', result);
+
                 if (result.success) {
                     const feedsList = document.getElementById('feeds');
                     feedsList.innerHTML = '';
                     result.data.forEach((feed, index) => {
+                        console.log(`Adding feed to UI: ${feed} (index: ${index})`);
                         const li = document.createElement('li');
                         li.innerHTML = `
                             <span onclick="fetchFeed(${index})">${feed}</span>
-                            <button onclick="removeFeed(${index})">Remove</button>
                         `;
                         feedsList.appendChild(li);
                     });
@@ -184,6 +189,7 @@
                     showError(result.error || 'Failed to load feeds');
                 }
             } catch (error) {
+                console.error('Error fetching feeds:', error);
                 showError('Error fetching feeds');
             }
         }
@@ -197,13 +203,17 @@
                 return;
             }
 
+            console.log('Adding feed:', url);
             try {
                 const response = await fetch(`${API_BASE}/feeds`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url })
                 });
+                console.log('Add feed response status:', response.status);
                 const result = await response.json();
+                console.log('Add feed result:', result);
+
                 if (result.success) {
                     urlInput.value = '';
                     loadFeeds();
@@ -211,17 +221,22 @@
                     showError(result.error || 'Failed to add feed');
                 }
             } catch (error) {
+                console.error('Error adding feed:', error);
                 showError('Error adding feed');
             }
         }
 
         // Remove a feed
         async function removeFeed(index) {
+            console.log('Removing feed at index:', index);
             try {
                 const response = await fetch(`${API_BASE}/feeds/${index}`, {
                     method: 'DELETE'
                 });
+                console.log('Remove feed response status:', response.status);
                 const result = await response.json();
+                console.log('Remove feed result:', result);
+
                 if (result.success) {
                     loadFeeds();
                     document.getElementById('items').innerHTML = '';
@@ -230,35 +245,44 @@
                     showError(result.error || 'Failed to remove feed');
                 }
             } catch (error) {
+                console.error('Error removing feed:', error);
                 showError('Error removing feed');
             }
         }
 
         // Fetch items for a specific feed
         async function fetchFeed(index) {
+            console.log('Fetching feed items for index:', index);
             try {
                 const response = await fetch(`${API_BASE}/fetch/${index}`);
+                console.log('Fetch feed response status:', response.status);
                 const result = await response.json();
+                console.log('Fetched feed items:', result);
+
                 if (result.success) {
                     displayItems(result.data, index);
                 } else {
                     showError(result.error || 'Failed to fetch feed items');
                 }
             } catch (error) {
+                console.error('Error fetching feed items:', error);
                 showError('Error fetching feed items');
             }
         }
 
         // Display feed items in the second column
         function displayItems(items, feedIndex) {
+            console.log('Displaying items for feed index:', feedIndex, 'Items:', items);
             const itemsDiv = document.getElementById('items');
             itemsDiv.innerHTML = '';
             if (items.length === 0) {
+                console.log('No items found for feed index:', feedIndex);
                 itemsDiv.innerHTML = '<p>No items found</p>';
                 return;
             }
 
             items.forEach((item, itemIndex) => {
+                console.log(`Adding item to UI: ${item.title} (feed index: ${feedIndex}, item index: ${itemIndex})`);
                 const div = document.createElement('div');
                 div.className = 'item';
                 div.innerHTML = `
@@ -272,39 +296,63 @@
 
         // Show preview in the third column
         async function showPreview(item, feedIndex, itemIndex) {
+            console.log('Showing preview for feed index:', feedIndex, 'item index:', itemIndex, 'Item:', item);
             const previewDiv = document.getElementById('preview');
             previewDiv.innerHTML = `
                 <h3>${item.title}</h3>
                 <p><a href="${item.link}" target="_blank">Open full article</a></p>
+                <p>Loading content...</p>
             `;
 
             try {
-                const response = await fetch(`${API_BASE}/fetch/${feedIndex}`);
-                const result = await response.json();
-                if (result.success && result.data[itemIndex]) {
-                    const feedItem = result.data[itemIndex];
-                    // Display the webpage content if available, otherwise fall back to description
-                    if (feedItem.content) {
-                        previewDiv.innerHTML += `<p>${feedItem.content}</p>`;
-                    } else if (feedItem.description) {
-                        previewDiv.innerHTML += `<p>${feedItem.description}</p>`;
+                // Fetch the webpage content on-demand
+                console.log('Fetching content for feed index:', feedIndex, 'item index:', itemIndex);
+                const contentResponse = await fetch(`${API_BASE}/fetch_content/${feedIndex}/${itemIndex}`);
+                console.log('Fetch content response status:', contentResponse.status);
+                const contentResult = await contentResponse.json();
+                console.log('Fetched content:', contentResult);
+
+                // Refresh the preview with the fetched content
+                previewDiv.innerHTML = `
+                    <h3>${item.title}</h3>
+                    <p><a href="${item.link}" target="_blank">Open full article</a></p>
+                `;
+
+                if (contentResult.success && contentResult.data) {
+                    previewDiv.innerHTML += `<p>${contentResult.data}</p>`;
+                } else {
+                    // Fall back to description if content fetch fails
+                    if (item.description) {
+                        console.log('Falling back to description for preview');
+                        previewDiv.innerHTML += `<p>${item.description}</p>`;
                     } else {
+                        console.log('No content or description available');
                         previewDiv.innerHTML += `<p>No content available.</p>`;
                     }
-                    // Add comments link if available
-                    if (feedItem.comments !== 'No Comments Link') {
-                        previewDiv.innerHTML += `<p><a href="${feedItem.comments}" target="_blank">Comments</a></p>`;
-                    }
-                } else {
-                    previewDiv.innerHTML += `<p>Unable to load preview content.</p>`;
+                }
+
+                // Add comments link if available
+                if (item.comments !== 'No Comments Link') {
+                    previewDiv.innerHTML += `<p><a href="${item.comments}" target="_blank">Comments</a></p>`;
                 }
             } catch (error) {
-                previewDiv.innerHTML += `<p>Unable to load preview content.</p>`;
+                console.error('Error fetching preview content:', error);
+                previewDiv.innerHTML = `
+                    <h3>${item.title}</h3>
+                    <p><a href="${item.link}" target="_blank">Open full article</a></p>
+                    <p>Unable to load preview content.</p>
+                `;
+                if (item.comments !== 'No Comments Link') {
+                    previewDiv.innerHTML += `<p><a href="${item.comments}" target="_blank">Comments</a></p>`;
+                }
             }
         }
 
         // Load feeds when page loads
-        document.addEventListener('DOMContentLoaded', loadFeeds);
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, initializing feeds');
+            loadFeeds();
+        });
     </script>
 </body>
 </html>
