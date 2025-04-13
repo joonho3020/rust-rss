@@ -3,7 +3,12 @@
     "https://hnrss.org/frontpage",
     "https://chipsandcheese.substack.com/feed",
     "https://lobste.rs/rss",
-    "https://www.phoronix.com/rss.php"
+    "https://www.phoronix.com/rss.php",
+    "https://spectrum.ieee.org/customfeeds/feed/all-topics/rss",
+    "https://cacm-acm-org-preprod.go-vip.net/category/architecture-and-hardware/feed",
+    "https://cacm-acm-org-preprod.go-vip.net/category/artificial-intelligence-machine-learning/feed",
+    "https://cacm-acm-org-preprod.go-vip.net/issue/latest/feed",
+    "https://semiengineering.com/feed/"
   ],
   "read_later": [
     {
