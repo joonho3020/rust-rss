@@ -5,123 +5,231 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSS Feed Reader</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1a1b26; /* Tokyo Night main background */
             display: flex;
             height: 100vh;
             overflow: hidden;
+            color: #a9b1d6; /* Tokyo Night primary text */
         }
+
         .container {
             display: flex;
             width: 100%;
             height: 100%;
         }
+
         .column {
-            padding: 15px;
+            padding: 20px;
             overflow-y: auto;
-            border-right: 1px solid #ddd;
+            border-right: 1px solid #414868; /* Tokyo Night border */
+            transition: background-color 0.2s ease;
         }
+
         .column-1 {
             width: 20%;
-            background-color: #e8ecef;
+            background-color: #24283b; /* Tokyo Night secondary background */
         }
+
         .column-2 {
             width: 30%;
-            background-color: #fff;
+            background-color: #1a1b26; /* Tokyo Night main background */
         }
+
         .column-3 {
             width: 50%;
-            background-color: #fff;
+            background-color: #1a1b26; /* Tokyo Night main background */
         }
+
         h2 {
-            font-size: 1.2em;
-            margin-top: 0;
-            color: #333;
-        }
-        .feed-controls {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #c0caf5; /* Tokyo Night lighter text for headings */
             margin-bottom: 15px;
+            border-bottom: 1px solid #414868; /* Tokyo Night border */
+            padding-bottom: 8px;
         }
+
+        .feed-controls {
+            margin-bottom: 20px;
+        }
+
         input[type="text"] {
-            padding: 6px;
+            padding: 8px 12px;
             width: 100%;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            margin-bottom: 10px;
+            border: 1px solid #414868; /* Tokyo Night border */
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: #24283b; /* Tokyo Night secondary background */
+            color: #a9b1d6; /* Tokyo Night primary text */
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s ease;
         }
+
+        input[type="text"]::placeholder {
+            color: #565f89; /* Tokyo Night secondary text */
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #7aa2f7; /* Tokyo Night blue */
+            box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.2); /* Tokyo Night blue glow */
+        }
+
         button {
-            padding: 6px 12px;
-            background-color: #007bff;
-            color: white;
+            padding: 8px 16px;
+            background-color: #7aa2f7; /* Tokyo Night blue */
+            color: #1a1b26; /* Tokyo Night main background for contrast */
             border: none;
-            border-radius: 3px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
             cursor: pointer;
-            margin-right: 5px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            margin-top: 8px;
         }
+
         button:hover {
-            background-color: #0056b3;
+            background-color: #6183d6; /* Darker Tokyo Night blue */
+            transform: translateY(-1px);
         }
+
+        button:active {
+            transform: translateY(0);
+        }
+
         .error {
-            color: red;
-            font-size: 0.9em;
+            color: #f7768e; /* Tokyo Night red */
+            font-size: 0.85rem;
             margin: 10px 0;
+            background-color: #2a1b26; /* Slightly lighter red background */
+            padding: 6px 10px;
+            border-radius: 4px;
         }
+
         .feed-list ul {
             list-style: none;
             padding: 0;
         }
+
         .feed-list li {
-            padding: 8px;
-            margin-bottom: 5px;
-            background-color: #fff;
-            border-radius: 3px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background-color: #24283b; /* Tokyo Night secondary background */
+            border-radius: 6px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
         }
+
         .feed-list li:hover {
-            background-color: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+            background-color: #2f334d; /* Slightly lighter background on hover */
         }
+
+        .feed-list li span {
+            font-size: 0.9rem;
+            color: #a9b1d6; /* Tokyo Night primary text */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .feed-list li button {
+            padding: 4px 8px;
+            background-color: #f7768e; /* Tokyo Night red */
+            font-size: 0.8rem;
+            margin-top: 0;
+        }
+
+        .feed-list li button:hover {
+            background-color: #db4b6e; /* Darker Tokyo Night red */
+        }
+
         .feed-items .item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
+            padding: 12px 15px;
+            border-bottom: 1px solid #414868; /* Tokyo Night border */
             cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
         }
+
         .feed-items .item:last-child {
             border-bottom: none;
         }
+
         .feed-items .item:hover {
-            background-color: #f9f9f9;
+            background-color: #24283b; /* Tokyo Night secondary background */
         }
+
         .feed-items .item h3 {
-            font-size: 1em;
+            font-size: 1rem;
+            font-weight: 500;
             margin: 0 0 5px 0;
-            color: #007bff;
+            color: #7aa2f7; /* Tokyo Night blue */
+            line-height: 1.4;
         }
+
         .feed-items .item p {
-            font-size: 0.9em;
-            color: #666;
+            font-size: 0.85rem;
+            color: #565f89; /* Tokyo Night secondary text */
             margin: 0;
         }
+
         .preview h3 {
-            font-size: 1.1em;
+            font-size: 1.15rem;
+            font-weight: 600;
             margin: 0 0 10px 0;
-            color: #333;
+            color: #c0caf5; /* Tokyo Night lighter text */
+            line-height: 1.3;
         }
+
         .preview p {
-            font-size: 0.9em;
-            color: #444;
-            line-height: 1.5;
+            font-size: 0.9rem;
+            color: #a9b1d6; /* Tokyo Night primary text */
+            line-height: 1.6;
+            margin-bottom: 10px;
         }
+
         .preview a {
-            color: #007bff;
+            color: #c3e88d; /* Tokyo Night light green */
             text-decoration: none;
+            font-weight: 500;
         }
+
         .preview a:hover {
             text-decoration: underline;
+            color: #7aa2f7; /* Darker Tokyo Night cyan */
+        }
+
+        /* Scrollbar styling for Tokyo Night */
+        .column::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .column::-webkit-scrollbar-track {
+            background: #24283b; /* Tokyo Night secondary background */
+        }
+
+        .column::-webkit-scrollbar-thumb {
+            background: #414868; /* Tokyo Night border */
+            border-radius: 4px;
+        }
+
+        .column::-webkit-scrollbar-thumb:hover {
+            background: #565f89; /* Tokyo Night secondary text */
         }
     </style>
 </head>
