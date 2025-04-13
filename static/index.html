@@ -308,12 +308,12 @@
         <!-- Column 3: Content Preview -->
         <div class="column column-3">
             <h2>Preview</h2>
-            <div class="preview" id="preview"></div>
             <button class="summarize-button" id="summarizeButton" style="display: none;" onclick="summarizeContent()">Summarize</button>
             <div class="summary" id="summary" style="display: none;">
                 <h4>Summary</h4>
                 <p id="summaryText"></p>
             </div>
+            <div class="preview" id="preview"></div>
         </div>
     </div>
 
@@ -466,7 +466,7 @@
             try {
                 const contentResponse = await fetch(`${API_BASE}/fetch_content/${feedIndex}/${itemIndex}`);
                 console.log('Fetch content response status:', contentResponse.status);
-                const contentResult = await response.json();
+                const contentResult = await contentResponse.json();
                 console.log('Fetched content:', contentResult);
 
                 previewDiv.innerHTML = `
