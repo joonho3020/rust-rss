@@ -1,0 +1,225 @@
+<!-- static/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS Feed Reader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .feed-controls {
+            margin-bottom: 20px;
+        }
+        .feed-list, .feed-items {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .feed-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .feed-item:last-child {
+            border-bottom: none;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>RSS Feed Reader</h1>
+    
+    <div class="feed-controls">
+        <input type="text" id="feedUrl" placeholder="Enter RSS feed URL">
+        <button onclick="addFeed()">Add Feed</button>
+        <button onclick="fetchAllFeeds()">Fetch All Feeds</button>
+    </div>
+    
+    <div class="error" id="error"></div>
+    
+    <div class="feed-list">
+        <h2>Saved Feeds</h2>
+        <ul id="feeds"></ul>
+    </div>
+    
+    <div class="feed-items">
+        <h2>Feed Items</h2>
+        <div id="items"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:3000';
+        
+        // Display error messages
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            setTimeout(() => {
+                document.getElementById('error').textContent = '';
+            }, 5000);
+        }
+
+        // Fetch and display all saved feeds
+        async function loadFeeds() {
+            try {
+                const response = await fetch(`${API_BASE}/feeds`);
+                const result = await response.json();
+                if (result.success) {
+                    const feedsList = document.getElementById('feeds');
+                    feedsList.innerHTML = '';
+                    result.data.forEach((feed, index) => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            ${feed} 
+                            <button onclick="fetchFeed(${index})">View</button>
+                            <button onclick="removeFeed(${index})">Remove</button>
+                        `;
+                        feedsList.appendChild(li);
+                    });
+                } else {
+                    showError(result.error || 'Failed to load feeds');
+                }
+            } catch (error) {
+                showError('Error fetching feeds');
+            }
+        }
+
+        // Add a new feed
+        async function addFeed() {
+            const urlInput = document.getElementById('feedUrl');
+            const url = urlInput.value.trim();
+            if (!url) {
+                showError('Please enter a feed URL');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/feeds`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    urlInput.value = '';
+                    loadFeeds();
+                } else {
+                    showError(result.error || 'Failed to add feed');
+                }
+            } catch (error) {
+                showError('Error adding feed');
+            }
+        }
+
+        // Remove a feed
+        async function removeFeed(index) {
+            try {
+                const response = await fetch(`${API_BASE}/feeds/${index}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadFeeds();
+                } else {
+                    showError(result.error || 'Failed to remove feed');
+                }
+            } catch (error) {
+                showError('Error removing feed');
+            }
+        }
+
+        // Fetch items for a specific feed
+        async function fetchFeed(index) {
+            try {
+                const response = await fetch(`${API_BASE}/fetch/${index}`);
+                const result = await response.json();
+                if (result.success) {
+                    displayItems(result.data);
+                } else {
+                    showError(result.error || 'Failed to fetch feed items');
+                }
+            } catch (error) {
+                showError('Error fetching feed items');
+            }
+        }
+
+        // Fetch all feeds and display grouped items
+        async function fetchAllFeeds() {
+            try {
+                const response = await fetch(`${API_BASE}/fetch_all`);
+                const result = await response.json();
+                if (result.success) {
+                    const allItems = result.data.flatMap(group => 
+                        group.items.map(item => ({ ...item, source: group.url }))
+                    );
+                    displayItems(allItems);
+                } else {
+                    showError(result.error || 'Failed to fetch all feeds');
+                }
+            } catch (error) {
+                showError('Error fetching all feeds');
+            }
+        }
+
+        // Display feed items
+        function displayItems(items) {
+            const itemsDiv = document.getElementById('items');
+            itemsDiv.innerHTML = '';
+            if (items.length === 0) {
+                itemsDiv.innerHTML = '<p>No items found</p>';
+                return;
+            }
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'feed-item';
+                div.innerHTML = `
+                    <h3>${item.title}</h3>
+                    <p><a href="${item.link}" target="_blank">Read more</a></p>
+                    ${item.comments !== 'No Comments Link' ? `<p><a href="${item.comments}" target="_blank">Comments</a></p>` : ''}
+                    ${item.source ? `<p>Source: ${item.source}</p>` : ''}
+                `;
+                itemsDiv.appendChild(div);
+            });
+        }
+
+        // Load feeds when page loads
+        document.addEventListener('DOMContentLoaded', loadFeeds);
+    </script>
+</body>
+</html>
