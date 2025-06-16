@@ -13,11 +13,11 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #1a1b26; /* Tokyo Night main background */
+            background-color: #ffffff; /* Bear Notes main background */
             display: flex;
             height: 100vh;
             overflow: hidden;
-            color: #a9b1d6; /* Tokyo Night primary text */
+            color: #333333; /* Bear Notes primary text */
         }
 
         .container {
@@ -29,31 +29,31 @@
         .column {
             padding: 20px;
             overflow-y: auto;
-            border-right: 1px solid #414868; /* Tokyo Night border */
+            border-right: 1px solid #e0e0e0; /* Bear Notes border */
             transition: background-color 0.2s ease;
         }
 
         .column-1 {
             width: 20%;
-            background-color: #24283b; /* Tokyo Night secondary background */
+            background-color: #f5f5f5; /* Bear Notes sidebar background */
         }
 
         .column-2 {
             width: 30%;
-            background-color: #1a1b26; /* Tokyo Night main background */
+            background-color: #ffffff; /* Bear Notes main background */
         }
 
         .column-3 {
             width: 50%;
-            background-color: #1a1b26; /* Tokyo Night main background */
+            background-color: #ffffff; /* Bear Notes main background */
         }
 
         h2 {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #c0caf5; /* Tokyo Night lighter text for headings */
+            color: #333333; /* Bear Notes heading text */
             margin-bottom: 15px;
-            border-bottom: 1px solid #414868; /* Tokyo Night border */
+            border-bottom: 1px solid #e0e0e0; /* Bear Notes border */
             padding-bottom: 8px;
         }
 
@@ -64,29 +64,29 @@
         input[type="text"] {
             padding: 8px 12px;
             width: 100%;
-            border: 1px solid #414868; /* Tokyo Night border */
+            border: 1px solid #e0e0e0; /* Bear Notes border */
             border-radius: 6px;
             font-size: 0.9rem;
-            background-color: #24283b; /* Tokyo Night secondary background */
-            color: #a9b1d6; /* Tokyo Night primary text */
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+            background-color: #ffffff; /* Bear Notes input background */
+            color: #333333; /* Bear Notes text */
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
             transition: border-color 0.2s ease;
         }
 
         input[type="text"]::placeholder {
-            color: #565f89; /* Tokyo Night secondary text */
+            color: #999999; /* Bear Notes placeholder text */
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: #7aa2f7; /* Tokyo Night blue */
-            box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.2); /* Tokyo Night blue glow */
+            border-color: #007AFF; /* Bear Notes blue */
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1); /* Bear Notes blue glow */
         }
 
         button {
             padding: 8px 16px;
-            background-color: #7aa2f7; /* Tokyo Night blue */
-            color: #1a1b26; /* Tokyo Night main background for contrast */
+            background-color: #007AFF; /* Bear Notes blue */
+            color: #ffffff; /* White text for contrast */
             border: none;
             border-radius: 6px;
             font-size: 0.9rem;
@@ -97,7 +97,7 @@
         }
 
         button:hover {
-            background-color: #6183d6; /* Darker Tokyo Night blue */
+            background-color: #0056b3; /* Darker Bear Notes blue */
             transform: translateY(-1px);
         }
 
@@ -106,10 +106,10 @@
         }
 
         .error {
-            color: #f7768e; /* Tokyo Night red */
+            color: #ff3b30; /* Bear Notes red */
             font-size: 0.85rem;
             margin: 10px 0;
-            background-color: #2a1b26; /* Slightly lighter red background */
+            background-color: #fff5f5; /* Light red background */
             padding: 6px 10px;
             border-radius: 4px;
         }
@@ -122,25 +122,25 @@
         .feed-list li {
             padding: 10px 12px;
             margin-bottom: 8px;
-            background-color: #24283b; /* Tokyo Night secondary background */
+            background-color: #ffffff; /* Bear Notes item background */
             border-radius: 6px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             transition: transform 0.1s ease, box-shadow 0.2s ease;
         }
 
         .feed-list li:hover {
             transform: translateY(-2px);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-            background-color: #2f334d; /* Slightly lighter background on hover */
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            background-color: #f8f8f8; /* Slightly darker background on hover */
         }
 
         .feed-list li span {
             font-size: 0.9rem;
-            color: #a9b1d6; /* Tokyo Night primary text */
+            color: #333333; /* Bear Notes text */
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -149,18 +149,18 @@
 
         .feed-list li button {
             padding: 4px 8px;
-            background-color: #f7768e; /* Tokyo Night red */
+            background-color: #ff3b30; /* Bear Notes red */
             font-size: 0.8rem;
             margin-top: 0;
         }
 
         .feed-list li button:hover {
-            background-color: #db4b6e; /* Darker Tokyo Night red */
+            background-color: #d63029; /* Darker Bear Notes red */
         }
 
         .feed-items .item {
             padding: 12px 15px;
-            border-bottom: 1px solid #414868; /* Tokyo Night border */
+            border-bottom: 1px solid #e0e0e0; /* Bear Notes border */
             cursor: pointer;
             border-radius: 6px;
             transition: background-color 0.2s ease;
@@ -171,7 +171,7 @@
         }
 
         .feed-items .item:hover {
-            background-color: #24283b; /* Tokyo Night secondary background */
+            background-color: #f8f8f8; /* Bear Notes hover background */
         }
 
         .feed-items .item h3,
@@ -183,44 +183,44 @@
             font-size: 1.15rem;
             font-weight: 600;
             margin: 0 0 10px 0;
-            color: #c0caf5; /* Tokyo Night lighter text */
+            color: #333333; /* Bear Notes text */
             line-height: 1.3;
         }
 
         .preview p {
             font-size: 0.9rem;
-            color: #a9b1d6; /* Tokyo Night primary text */
+            color: #333333; /* Bear Notes text */
             line-height: 1.6;
             margin-bottom: 10px;
         }
 
         .preview a {
-            color: #c3e88d; /* Tokyo Night light green */
+            color: #007AFF; /* Bear Notes blue */
             text-decoration: none;
             font-weight: 500;
         }
 
         .preview a:hover {
             text-decoration: underline;
-            color: #7aa2f7; /* Darker Tokyo Night cyan */
+            color: #0056b3; /* Darker Bear Notes blue */
         }
 
-        /* Scrollbar styling for Tokyo Night */
+        /* Scrollbar styling for Bear Notes */
         .column::-webkit-scrollbar {
             width: 8px;
         }
 
         .column::-webkit-scrollbar-track {
-            background: #24283b; /* Tokyo Night secondary background */
+            background: #f5f5f5; /* Bear Notes sidebar background */
         }
 
         .column::-webkit-scrollbar-thumb {
-            background: #414868; /* Tokyo Night border */
+            background: #e0e0e0; /* Bear Notes border */
             border-radius: 4px;
         }
 
         .column::-webkit-scrollbar-thumb:hover {
-            background: #565f89; /* Tokyo Night secondary text */
+            background: #cccccc; /* Bear Notes hover border */
         }
 
         .save-read-later {
@@ -234,8 +234,8 @@
 
         .summarize-button {
             padding: 8px 16px;
-            background-color: #7aa2f7; /* Tokyo Night blue */
-            color: #1a1b26;
+            background-color: #007AFF; /* Bear Notes blue */
+            color: #ffffff;
             border: none;
             border-radius: 6px;
             font-size: 0.9rem;
@@ -247,7 +247,7 @@
         }
 
         .summarize-button:hover {
-            background-color: #6183d6; /* Darker Tokyo Night blue */
+            background-color: #0056b3; /* Darker Bear Notes blue */
             transform: translateY(-1px);
         }
 
@@ -257,19 +257,19 @@
 
         /* Style for the summary section */
         .summary {
-            background-color: #24283b; /* Tokyo Night secondary background */
+            background-color: #f8f8f8; /* Bear Notes hover background */
             padding: 10px;
             border-radius: 6px;
             margin-top: 10px;
         }
 
         .summary h4 {
-            color: #c0caf5; /* Tokyo Night lighter text */
+            color: #333333; /* Bear Notes text */
             margin-bottom: 8px;
         }
 
         .summary p {
-            color: #a9b1d6; /* Tokyo Night primary text */
+            color: #333333; /* Bear Notes text */
             line-height: 1.6;
         }
     </style>

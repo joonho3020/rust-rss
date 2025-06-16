@@ -8,20 +8,14 @@
     "https://www.phoronix.com/rss.php",
     "https://spectrum.ieee.org/customfeeds/feed/all-topics/rss",
     "https://bartoszmilewski.com/feed/",
-    "http://rss.cnn.com/rss/cnn_topstories.rss"
+    "http://rss.cnn.com/rss/cnn_topstories.rss",
+    "https://www.nature.com/nature.rss",
+    "https://nautil.us/feed/?_sp=9e5007c5-117b-441e-8095-2568344dab00.1746465163801",
+    "https://dynomight.net/feed.xml",
+    "https://www.cpushack.com/feed/",
+    "https://endler.dev/rss.xml",
+    "https://www.techmeme.com/feed.xml",
+    "https://bernsteinbear.com/feed.xml"
   ],
-  "read_later": [
-    {
-      "title": "Manchester dataflow computer",
-      "link": "https://courses.cs.washington.edu/courses/csep548/05sp/gurd-cacm85-prototype.pdf",
-      "comments": "No Comments Link",
-      "description": "Custom link added by user"
-    },
-    {
-      "title": "Anton MD simulation machine",
-      "link": "https://web.archive.org/web/20120423063209/http://cacs.usc.edu/education/cs653/Shaw-msMD-SC09.pdf",
-      "comments": "No Comments Link",
-      "description": "Custom link added by user"
-    }
-  ]
+  "read_later": []
 }
